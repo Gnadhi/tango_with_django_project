@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+
 from django.urls import path
 from django.urls import include
 from rango import views
@@ -23,4 +24,5 @@ urlpatterns = [
     path("rango/", include("rango.urls")),
     # The above maps any URLs starting with rango/ to be handled by rango
     path("admin/", admin.site.urls),
+    path("rango/about/", views.about, name="about")  # creates new about page
 ]
