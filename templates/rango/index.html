@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+
+{% load staticfiles %} <!--django loads the static files -->
+
+<head>
+    <title>Rango</title>
+</head>
+<body>
+    <h1>Rango says...</h1>
+    <div>
+        Hey there partner! <br />
+        <strong>{{boldmessage}}}</strong> <br />
+    </div>
+    <div>
+        <a href="/rango/about/">About</a>
+        <img src="{% static "images/rango.jpg"%}" alt = "Pciture of rango" />
+    </div>
+</body>
+</html>

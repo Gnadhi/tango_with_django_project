@@ -13,11 +13,16 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
+
 from django.contrib import admin
 
 from django.urls import path
 from django.urls import include
 from rango import views
+
+
 
 urlpatterns = [
     path("", views.index, name="index"),
@@ -25,4 +30,4 @@ urlpatterns = [
     # The above maps any URLs starting with rango/ to be handled by rango
     path("admin/", admin.site.urls),
     path("rango/about/", views.about, name="about")  # creates new about page
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_URL)
