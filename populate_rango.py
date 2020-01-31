@@ -12,20 +12,20 @@ from rango.models import Category, Page
 
 def populate():
     python_pages = [
-        {"title": "Official python Tutorial",
+        {"title": "Official Python Tutorial",
          "url": "http://docs.python.org/3/tutorial/"},
-        {"title": "How to think like a computer scientist",
+        {"title": "How to Think like a Computer Scientist",
          "url": "http://www.greenteapress.com/thinkpython/"},
-        {"title": "Learn python in 10 minutes",
+        {"title": "Learn Python in 10 Minutes",
          "url": "http://www.korokithakis.net/tutorials/python/"}
     ]
 
     django_pages = [
-        {"title": "Offical Django Tutorial",
+        {"title": "Official Django Tutorial",
          "url": "https://docs.djangoproject.com/en/2.1/intro/tutorial01/"},
         {"title": "Django Rocks",
          "url": "http://www.djangorocks.com/"},
-        {"title": "How to tango with django",
+        {"title": "How to Tango with Django",
          "url": "http://www.tangowithdjango.com/"}
     ]
 
@@ -36,12 +36,12 @@ def populate():
          "url": "http://flask.pocoo.org"}
     ]
 
-    cats = {"python": {"pages": python_pages, "views": 128, "likes": 64},
+    cats = {"Python": {"pages": python_pages, "views": 128, "likes": 64},
             "Django": {"pages": django_pages, "views": 64, "likes": 32},
             "Other Frameworks": {"pages": other_pages, "views": 32, "likes": 16}}
 
     for cat, cat_data in cats.items():
-        c = add_cat(cat)
+        c = add_cat(cat, cat_data["views"], cat_data["likes"])
         for p in cat_data["pages"]:
             add_page(c, p["title"], p["url"])
 
@@ -58,8 +58,8 @@ def add_page(cat, title, url, views=0):
     return p
 
 
-def add_cat(name):
-    c = Category.objects.get_or_create(name=name)[0]
+def add_cat(name, views, likes):
+    c = Category.objects.get_or_create(name=name, views=views, likes=likes)[0]
     c.save()
     return c
 
