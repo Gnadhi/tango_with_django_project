@@ -1,19 +1,18 @@
-<!DOCTYPE html>
-
+{% extends "rango/base.html" %}
 {% load staticfiles %} <!--django loads the static files -->
 
-<head>
-    <title>About</title>
-</head>
-<body>
+{% block title_block %}
+About Rango
+{% endblock %}
+
+{% block body_block %}
     <h1>This is a about page</h1>
     <div>
         This is such a cool about page !!! <br />
         <strong>{{boldmessage}}</strong> <br />
     </div>
     <div>
-        <a href="/rango/">Home</a>
+        <a href="{% url "rango:index" %}">Home</a>
         <img src="media/d.png" alt = "This is a image of the cat !!!" />
     </div>
-</body>
-</html>
+{% endblock %}

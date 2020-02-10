@@ -1,13 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Rango</title>
-</head>
+{% extends "rango/base.html" %}
+{% load staticfiles %} <!--django loads the static files -->
 
-<body>
+{% block title_block %}
+    Add a Category
+{% endblock %}
+
+{% block body_block %}
     <h1>Add a Category</h1>
     <div>
-        <form id="category_form" method="post" action="/rango/add_category/">
+        <form id="category_form" method="post" action="{% url "rango:add_category" %}">
             {% csrf_token %}
             <!--The first for loop controls hidden elements the second visible elements -->
             {% for hidden in form.hidden_fields %}
@@ -21,11 +22,9 @@
             <input type="submit" name="submit" value="Create Category" />
         </form>
     {% if category %}
-    <a href="/rango/category/{{ category.slug }}/add_page/">Add Page</a> <br/>
+    <a href="{% url 'rango:add_category' category.slug %}">Add Category</a> <br/>
     {% else %}
         The specified category does not exist.
     {% endif %}
     </div>
-
-</body>
-</html>
+{% endblock %}
