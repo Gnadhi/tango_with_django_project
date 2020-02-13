@@ -7,24 +7,28 @@
 
 {% block body_block %}
     <h1>Add a Category</h1>
-    <div>
-        <form id="category_form" method="post" action="{% url "rango:add_category" %}">
-            {% csrf_token %}
-            <!--The first for loop controls hidden elements the second visible elements -->
-            {% for hidden in form.hidden_fields %}
-                {{hidden}}
-            {% endfor %}
-            {% for field in form.visible_fields %}
-                {{ field.errors }}
-                {{ field.help_text }}
-                {{ field }}
-            {% endfor %}
-            <input type="submit" name="submit" value="Create Category" />
-        </form>
-    {% if category %}
-    <a href="{% url 'rango:add_category' category.slug %}">Add Category</a> <br/>
+    {% if user.is_authenticated %}
+        <div>
+            <form id="category_form" method="post" action="{% url "rango:add_category" %}">
+                {% csrf_token %}
+                <!--The first for loop controls hidden elements the second visible elements -->
+                {% for hidden in form.hidden_fields %}
+                    {{hidden}}
+                {% endfor %}
+                {% for field in form.visible_fields %}
+                    {{ field.errors }}
+                    {{ field.help_text }}
+                    {{ field }}
+                {% endfor %}
+                <input type="submit" name="submit" value="Create Category" />
+            </form>
+        {% if category %}
+        <a href="{% url 'rango:add_category' category.slug %}">Add Category</a> <br/>
+        {% else %}
+            The specified category does not exist.
+        {% endif %}
+        </div>
     {% else %}
-        The specified category does not exist.
+        Only user that have logged in can add categories.
     {% endif %}
-    </div>
 {% endblock %}

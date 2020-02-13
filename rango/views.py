@@ -12,6 +12,11 @@ from rango.forms import CategoryForm
 from rango.forms import PageForm
 from django.shortcuts import redirect
 from django.urls import reverse
+from rango.forms import UserForm, UserProfileForm
+
+from django.contrib.auth import authenticate, login, logout
+
+from django.contrib.auth.decorators import login_required
 
 
 def index(request):
@@ -65,54 +70,162 @@ def show_category(request, category_name_slug):
 
 
 def add_category(request):
-    form = CategoryForm()
+    if request.user.is_authenticated:
+        form = CategoryForm()
 
-    # A HTTP post ?
-    if request.method == "POST":
-        form = CategoryForm(request.POST)
+        # A HTTP post ?
+        if request.method == "POST":
+            form = CategoryForm(request.POST)
 
-        # have we been provided with a valid form ?
-        if form.is_valid():
-            # save new category in database.
-            form.save(commit=True)
-            # Now that the category is saved we confirm this.
-            # for now just redirect the user back to the index view.
-            return redirect("/rango/")
-        else:
-            # The supplied form contains errors
-            print(form.errors)
+            # have we been provided with a valid form ?
+            if form.is_valid():
+                # save new category in database.
+                form.save(commit=True)
+                # Now that the category is saved we confirm this.
+                # for now just redirect the user back to the index view.
+                return redirect("/rango/")
+            else:
+                # The supplied form contains errors
+                print(form.errors)
 
-    # Will handle the bad form, new form, or no form supplied case
-    # render the form with error message (if any)
-    return render(request, "rango/add_category.html", {"form": form})
+        # Will handle the bad form, new form, or no form supplied case
+        # render the form with error message (if any)
+        return render(request, "rango/add_category.html", {"form": form})
+    else:
+        return redirect(reverse('rango:login'))
 
 
 def add_page(request, category_name_slug):
-    try:
-        category = Category.objects.get(slug=category_name_slug)
-    except Category.DoesNotExist:
-        category = None
+    if request.user.is_authenticated:
+        try:
+            category = Category.objects.get(slug=category_name_slug)
+        except Category.DoesNotExist:
+            category = None
 
-    # You can not add a page to a Category that does not exist....
-    if category is None:
-        return redirect("/rango/")
+        # You can not add a page to a Category that does not exist....
+        if category is None:
+            return redirect("/rango/")
 
-    form = PageForm()
+        form = PageForm()
+
+        if request.method == "POST":
+            form = PageForm(request.POST)
+
+            if form.is_valid():
+                if category:
+                    page = form.save(commit=False)
+                    page.category = category
+                    page.views = 0
+                    page.save()
+
+                    return redirect(reverse("rango:show_category", kwargs={"category_name_slug": category_name_slug}))
+
+            else:
+                print(form.errors)
+
+        context_dict = {"forms": form, "category": category}
+        return render(request, "rango/add_page.html", context=context_dict)
+    else:
+        return redirect(reverse('rango:login'))
+
+
+def register(request):
+    # A boolean value for telling the template
+    # whether the registration was successful
+    # Set to False initially. Code changes value to
+    # True when registration succeeds.
+    registered = False
 
     if request.method == "POST":
-        form = PageForm(request.POST)
+        # attempts to grab the information the raw form info
+        user_form = UserForm(request.POST)
+        profile_form = UserProfileForm(request.POST)
 
-        if form.is_valid():
-            if category:
-                page = form.save(commit=False)
-                page.category = category
-                page.views = 0
-                page.save()
+        if user_form.is_valid() and profile_form.is_valid():
+            # save the users data into the database
+            user = user_form.save()
 
-                return redirect(reverse("rango:show_category", kwargs={"category_name_slug": category_name_slug}))
+            # now we hash the password with the set_password method
+            # once hashed we can update the user object
+            user.set_password(user.password)
+            user.save()
 
+            # now sort out the user profile instance
+            # since we need to set the user attribute ourselves
+            # we set commit=False this delays saving the model
+            # until we 're ready to avoid integrity problems
+            profile = profile_form.save(commit=False)
+            profile.user = user
+
+            # did the user provide a profile pic
+            # if so we need to get it form the input form and
+            # put it the userProfile model
+            if "picture" in request.FILES:
+                profile.picture = request.FILES["picture"]
+
+            # now we save the userProfile model instance
+            profile.save()
+
+            # update our variable to indicate that the template
+            # registration was successful
+            registered = True
         else:
-            print(form.errors)
+            # Invalid from or forms - mistake or something else?
+            # print problems to the terminal
+            print(user_form.errors, profile_form.errors)
+    else:
+        # Not a HTTP POST, so we render our form using two MdoelForm instances
+        # These forms will be blank, ready for user input.
+        user_form = UserForm()
+        profile_form = UserProfileForm()
 
-    context_dict = {"forms": form, "category": category}
-    return render(request, "rango/add_page.html", context=context_dict)
+    # render the template depneding on the context
+    return render(request, "rango/register.html", context={"user_form": user_form, "profile_form": profile_form,
+                                                           "registered": registered})
+
+
+def user_login(request):
+    # if the requets is a http request try to pull out the relevant info
+    if request.method == "POST":
+        # gather the username and password provided by the user
+        # returns None if the value does not exist.
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        # uses Django's machinery to attempt to see if the username/password
+        # combination is valid - a user object is returned if it is
+        user = authenticate(username=username, password=password)
+
+        # if we have a user object the details are correct.
+        # if none pythons way of representing the absence of a value
+        if user:
+            # is the account active or has it been disabled
+            if user.is_active:
+                # if the account is valid and active we can log the user in
+                # we'll send the uer back to the homepage.
+                login(request, user)
+                return redirect(reverse("rango:index"))
+            else:
+                # An inactive account was used - no logging in !
+                return HttpResponse("Your Rango account is disabled.")
+        else:
+            # Bad login details we're provided. so we cant log the user in
+            print(f"Invalid login details: {username}, {password}")
+            return HttpResponse("Invalid login details supplied")
+    # This scenario would most lilly be a HTTP get.
+    else:
+        # No context variables to pass to the template hence the
+        # blank dict object
+        return render(request, "rango/login.html")
+
+
+@login_required
+def restricted(request):
+    return render(request, "rango/restricted.html")
+
+
+@login_required
+def user_logout(request):
+    # since we know the user is logged in we can just log them out
+    logout(request)
+    # take the user back to the homepage
+    return redirect(reverse("rango:index"))

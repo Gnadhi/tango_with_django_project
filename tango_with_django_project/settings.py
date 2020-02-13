@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.contrib.sessions.models.Session"
 ]
 
 ROOT_URLCONF = 'tango_with_django_project.urls'
@@ -130,3 +131,5 @@ STATICFILES_DIRS = [STATIC_DIR, ]
 MEDIA_ROOT = MEDIA_DIR
 
 MEDIA_URL = "/media/"
+
+LOGIN_URL = "rango:login"
